@@ -7,8 +7,8 @@
     <owners>jerrylai</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Afx.HttpClient</description>
-    <releaseNotes>Afx.HttpClient</releaseNotes>
-    <copyright>Copyright © mycsv 2018</copyright>
+    <projectUrl>https://github.com/jerrylai/Afx.HttpClient</projectUrl>
+	<copyright>jerrylai@aliyun.com</copyright>
     <tags>HttpClient</tags>
     <dependencies>
       <group targetFramework=".NETFramework2.0">
