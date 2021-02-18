@@ -2,13 +2,13 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
   <metadata>
     <id>Afx.HttpClient</id>
-    <version>9.0.0</version>
+    <version>9.1.0</version>
     <authors>jerrylai</authors>
     <owners>jerrylai</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Afx.HttpClient</description>
     <projectUrl>https://github.com/jerrylai/Afx.HttpClient</projectUrl>
-	<copyright>jerrylai@aliyun.com</copyright>
+    <copyright>jerrylai@aliyun.com</copyright>
     <tags>HttpClient</tags>
     <dependencies>
       <group targetFramework=".NETFramework2.0">
@@ -36,6 +36,8 @@
       <group targetFramework=".NETFramework4.8">
       </group>
       <group targetFramework=".NETStandard2.0">
+      </group>
+      <group targetFramework=".NETStandard2.1">
       </group>
     </dependencies>
   </metadata>
