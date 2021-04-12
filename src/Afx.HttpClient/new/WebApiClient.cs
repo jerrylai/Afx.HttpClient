@@ -216,15 +216,25 @@ namespace Afx.HttpClient
         /// UserAgent
         /// </summary>
         public string UserAgent { get; set; }
-
+        /// <summary>
+        /// 
+        /// </summary>
         public Version Version { get; set; }
-
+        /// <summary>
+        /// 
+        /// </summary>
         public string Host { get; set; }
-
+        /// <summary>
+        /// 
+        /// </summary>
         public string From { get; set; }
-
+        /// <summary>
+        /// 
+        /// </summary>
         public Uri Referrer { get; set; }
-
+        /// <summary>
+        /// 
+        /// </summary>
         public IDictionary<string, string> Headers { get; private set; }
 
         private string m_baseAddress = null;
@@ -251,7 +261,9 @@ namespace Afx.HttpClient
                 this.m_baseAddress = value;
             }
         }
-
+        /// <summary>
+        /// 
+        /// </summary>
         public bool IsDisposed { get; private set; }
 
         /// <summary>
@@ -259,11 +271,12 @@ namespace Afx.HttpClient
         /// </summary>
         public WebApiClient()
         {
-            this.Init(nameof(WebApiClient), null);
+            this.Init(null, null);
         }
 
         private void Init(string name, Action<HttpClientHandler> config)
         {
+            if (string.IsNullOrEmpty(name)) name = "default";
             var handler = GetHandler(name, config);
             m_client = new System.Net.Http.HttpClient(handler, false);
             //text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3
@@ -283,17 +296,25 @@ namespace Afx.HttpClient
             this.Headers = new Dictionary<string, string>();
             this.IsDisposed = false;
         }
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="baseAddress"></param>
         public WebApiClient(string baseAddress)
         {
             this.BaseAddress = baseAddress;
             this.Init(nameof(WebApiClient), null);
         }
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="baseAddress"></param>
+        /// <param name="name"></param>
+        /// <param name="config"></param>
         public WebApiClient(string baseAddress, string name = null, Action<HttpClientHandler> config = null)
         {
             this.BaseAddress = baseAddress;
-            this.Init(name ?? nameof(WebApiClient), config);
+            this.Init(null, config);
         }
 
         private string BuildUrl(string url)
@@ -335,67 +356,149 @@ namespace Afx.HttpClient
         }
 
         #region get
-        public async Task<BytesBody> GetBytesAsync(string url)
+        /// <summary>
+        /// get
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="retry_count">io异常重试次数，-1.不重试，0.重试三次</param>
+        /// <returns></returns>
+        public async Task<BytesBody> GetBytesAsync(string url, int retry_count = 0)
         {
-            using (var request = new HttpRequestMessage(HttpMethod.Get, this.BuildUrl(url)))
+            try
             {
-                this.SetDefault(request);
-                HttpResponseMessage rp = await this.m_client.SendAsync(request);
-                BytesBody result = new BytesBody(rp);
-                this.AddDispose(result);
-                await result.Proc();
+                using (var request = new HttpRequestMessage(HttpMethod.Get, this.BuildUrl(url)))
+                {
+                    this.SetDefault(request);
+                    HttpResponseMessage rp = await this.m_client.SendAsync(request);
+                    BytesBody result = new BytesBody(rp);
+                    this.AddDispose(result);
+                    await result.Proc();
 
-                return result;
+                    return result;
+                }
+            }
+            catch(Exception ex)
+            {
+                if(ex is HttpRequestException && ex.InnerException != null && ex.InnerException is IOException)
+                {
+                    if(retry_count >= 0 && retry_count < 3)
+                    {
+                        retry_count++;
+                        return await this.GetBytesAsync(url, retry_count);
+                    }
+                }
+
+                throw ex;
             }
         }
 
-        public BytesBody GetBytes(string url)
+        /// <summary>
+        /// get
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="retry_count">io异常重试次数，-1.不重试，0.重试三次</param>
+        /// <returns></returns>
+        public BytesBody GetBytes(string url, int retry_count = 0)
         {
-            var t = this.GetBytesAsync(url);
+            var t = this.GetBytesAsync(url, retry_count);
             t.Wait();
 
             return t.Result;
         }
 
-        public async Task<StreamBody> GetStreamAsync(string url)
+        /// <summary>
+        /// get
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="retry_count">io异常重试次数，-1.不重试，0.重试三次</param>
+        /// <returns></returns>
+        public async Task<StreamBody> GetStreamAsync(string url, int retry_count = 0)
         {
-            using (var request = new HttpRequestMessage(HttpMethod.Get, this.BuildUrl(url)))
+            try
             {
-                this.SetDefault(request);
-                var rp = await this.m_client.SendAsync(request);
-                StreamBody result = new StreamBody(rp);
-                this.AddDispose(result);
-                await result.Proc();
+                using (var request = new HttpRequestMessage(HttpMethod.Get, this.BuildUrl(url)))
+                {
+                    this.SetDefault(request);
+                    var rp = await this.m_client.SendAsync(request);
+                    StreamBody result = new StreamBody(rp);
+                    this.AddDispose(result);
+                    await result.Proc();
 
-                return result;
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ex is HttpRequestException && ex.InnerException != null && ex.InnerException is IOException)
+                {
+                    if (retry_count >= 0 && retry_count < 3)
+                    {
+                        retry_count++;
+                        return await this.GetStreamAsync(url, retry_count);
+                    }
+                }
+
+                throw ex;
             }
         }
-
-        public StreamBody GetStream(string url)
+        /// <summary>
+        /// get
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="retry_count">io异常重试次数，-1.不重试，0.重试三次</param>
+        /// <returns></returns>
+        public StreamBody GetStream(string url, int retry_count = 0)
         {
-            var t = this.GetStreamAsync(url);
+            var t = this.GetStreamAsync(url, retry_count);
             t.Wait();
 
             return t.Result;
         }
 
-        public async Task<StringBody> GetAsync(string url)
+        /// <summary>
+        /// get
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="retry_count">io异常重试次数，-1.不重试，0.重试三次</param>
+        /// <returns></returns>
+        public async Task<StringBody> GetAsync(string url, int retry_count = 0)
         {
-            using (var request = new HttpRequestMessage(HttpMethod.Get, this.BuildUrl(url)))
+            try
             {
-                this.SetDefault(request);
-                var rp = await this.m_client.SendAsync(request);
-                StringBody result = new StringBody(rp);
-                this.AddDispose(result);
-                await result.Proc();
+                using (var request = new HttpRequestMessage(HttpMethod.Get, this.BuildUrl(url)))
+                {
+                    this.SetDefault(request);
+                    var rp = await this.m_client.SendAsync(request);
+                    StringBody result = new StringBody(rp);
+                    this.AddDispose(result);
+                    await result.Proc();
 
-                return result;
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ex is HttpRequestException && ex.InnerException != null && ex.InnerException is IOException)
+                {
+                    if (retry_count >= 0 && retry_count < 3)
+                    {
+                        retry_count++;
+                        return await this.GetAsync(url, retry_count);
+                    }
+                }
+
+                throw ex;
             }
         }
-
-        public StringBody Get(string url)
+        /// <summary>
+        /// get
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="retry_count">io异常重试次数，-1.不重试，0.重试三次</param>
+        /// <returns></returns>
+        public StringBody Get(string url, int retry_count = 0)
         {
-            var t = this.GetAsync(url);
+            var t = this.GetAsync(url, retry_count);
             t.Wait();
 
             return t.Result;
@@ -403,67 +506,146 @@ namespace Afx.HttpClient
         #endregion
 
         #region delete
-        public async Task<BytesBody> DeleteBytesAsync(string url)
+        /// <summary>
+        /// delete
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="retry_count">io异常重试次数，-1.不重试，0.重试三次</param>
+        /// <returns></returns>
+        public async Task<BytesBody> DeleteBytesAsync(string url, int retry_count = 0)
         {
-            using (var request = new HttpRequestMessage(HttpMethod.Delete, this.BuildUrl(url)))
+            try
             {
-                this.SetDefault(request);
-                var t = await this.m_client.SendAsync(request);
-                BytesBody result = new BytesBody(t);
-                this.AddDispose(result);
-                await result.Proc();
+                using (var request = new HttpRequestMessage(HttpMethod.Delete, this.BuildUrl(url)))
+                {
+                    this.SetDefault(request);
+                    var t = await this.m_client.SendAsync(request);
+                    BytesBody result = new BytesBody(t);
+                    this.AddDispose(result);
+                    await result.Proc();
 
-                return result;
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ex is HttpRequestException && ex.InnerException != null && ex.InnerException is IOException)
+                {
+                    if (retry_count >= 0 && retry_count < 3)
+                    {
+                        retry_count++;
+                        return await this.DeleteBytesAsync(url, retry_count);
+                    }
+                }
+
+                throw ex;
             }
         }
-
-        public BytesBody DeleteBytes(string url)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="retry_count">io异常重试次数，-1.不重试，0.重试三次</param>
+        /// <returns></returns>
+        public BytesBody DeleteBytes(string url, int retry_count = 0)
         {
-            var t = this.DeleteBytesAsync(url);
+            var t = this.DeleteBytesAsync(url, retry_count);
             t.Wait();
 
             return t.Result;
         }
-
-        public async Task<StreamBody> DeleteStreamAsync(string url)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="retry_count">io异常重试次数，-1.不重试，0.重试三次</param>
+        /// <returns></returns>
+        public async Task<StreamBody> DeleteStreamAsync(string url, int retry_count = 0)
         {
-            using (var request = new HttpRequestMessage(HttpMethod.Delete, this.BuildUrl(url)))
+            try
             {
-                this.SetDefault(request);
-                var t = await this.m_client.SendAsync(request);
-                StreamBody result = new StreamBody(t);
-                this.AddDispose(result);
-                await result.Proc();
+                using (var request = new HttpRequestMessage(HttpMethod.Delete, this.BuildUrl(url)))
+                {
+                    this.SetDefault(request);
+                    var t = await this.m_client.SendAsync(request);
+                    StreamBody result = new StreamBody(t);
+                    this.AddDispose(result);
+                    await result.Proc();
 
-                return result;
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ex is HttpRequestException && ex.InnerException != null && ex.InnerException is IOException)
+                {
+                    if (retry_count >= 0 && retry_count < 3)
+                    {
+                        retry_count++;
+                        return await this.DeleteStreamAsync(url, retry_count);
+                    }
+                }
+
+                throw ex;
             }
         }
-
-        public StreamBody DeleteStream(string url)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="retry_count">io异常重试次数，-1.不重试，0.重试三次</param>
+        /// <returns></returns>
+        public StreamBody DeleteStream(string url, int retry_count = 0)
         {
-            var t = this.DeleteStreamAsync(url);
+            var t = this.DeleteStreamAsync(url, retry_count);
             t.Wait();
 
             return t.Result;
         }
-
-        public async Task<StringBody> DeleteAsync(string url)
+        /// <summary>
+        /// io异常重试次数，-1.不重试，0.重试三次
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="retry_count"></param>
+        /// <returns></returns>
+        public async Task<StringBody> DeleteAsync(string url, int retry_count = 0)
         {
-            using (var request = new HttpRequestMessage(HttpMethod.Delete, this.BuildUrl(url)))
+            try
             {
-                this.SetDefault(request);
-                var t = await this.m_client.SendAsync(request);
-                StringBody result = new StringBody(t);
-                this.AddDispose(result);
-                await result.Proc();
+                using (var request = new HttpRequestMessage(HttpMethod.Delete, this.BuildUrl(url)))
+                {
+                    this.SetDefault(request);
+                    var t = await this.m_client.SendAsync(request);
+                    StringBody result = new StringBody(t);
+                    this.AddDispose(result);
+                    await result.Proc();
 
-                return result;
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ex is HttpRequestException && ex.InnerException != null && ex.InnerException is IOException)
+                {
+                    if (retry_count >= 0 && retry_count < 3)
+                    {
+                        retry_count++;
+                        return await this.DeleteAsync(url, retry_count);
+                    }
+                }
+
+                throw ex;
             }
         }
-
-        public StringBody Delete(string url)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="retry_count">io异常重试次数，-1.不重试，0.重试三次</param>
+        /// <returns></returns>
+        public StringBody Delete(string url, int retry_count = 0)
         {
-            var t = this.DeleteAsync(url);
+            var t = this.DeleteAsync(url, retry_count);
             t.Wait();
 
             return t.Result;
@@ -471,85 +653,164 @@ namespace Afx.HttpClient
         #endregion
 
         #region post
-        public async Task<BytesBody> PostBytesAsync(string url, FormData formData)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="formData"></param>
+        /// <param name="retry_count">io异常重试次数，-1.不重试，0.重试三次</param>
+        /// <returns></returns>
+        public async Task<BytesBody> PostBytesAsync(string url, FormData formData, int retry_count = 0)
         {
-            this.AddDispose(formData);
-            using (var content = formData?.GetContent())
+            try
             {
-                using (var request = new HttpRequestMessage(HttpMethod.Post, this.BuildUrl(url)))
+                this.AddDispose(formData);
+                using (var content = formData?.GetContent())
                 {
-                    this.SetDefault(request);
-                    request.Content = content;
-                    var t = await this.m_client.SendAsync(request);
-                    
-                    BytesBody result = new BytesBody(t);
-                    this.AddDispose(result);
-                    await result.Proc();
+                    using (var request = new HttpRequestMessage(HttpMethod.Post, this.BuildUrl(url)))
+                    {
+                        this.SetDefault(request);
+                        request.Content = content;
+                        var t = await this.m_client.SendAsync(request);
 
-                    return result;
+                        BytesBody result = new BytesBody(t);
+                        this.AddDispose(result);
+                        await result.Proc();
+
+                        return result;
+                    }
                 }
             }
-        }
+            catch (Exception ex)
+            {
+                if (ex is HttpRequestException && ex.InnerException != null && ex.InnerException is IOException)
+                {
+                    if (retry_count >= 0 && retry_count < 3)
+                    {
+                        retry_count++;
+                        return await this.PostBytesAsync(url, formData, retry_count);
+                    }
+                }
 
-        public BytesBody PostBytes(string url, FormData formData)
+                throw ex;
+            }
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="formData"></param>
+        /// <param name="retry_count">io异常重试次数，-1.不重试，0.重试三次</param>
+        /// <returns></returns>
+        public BytesBody PostBytes(string url, FormData formData, int retry_count = 0)
         {
-            var t = this.PostBytesAsync(url, formData);
+            var t = this.PostBytesAsync(url, formData, retry_count);
             t.Wait();
 
             return t.Result;
         }
 
-        public async Task<StreamBody> PostStreamAsync(string url, FormData formData)
+        public async Task<StreamBody> PostStreamAsync(string url, FormData formData, int retry_count = 0)
         {
-            this.AddDispose(formData);
-            using (var content = formData?.GetContent())
+            try
             {
-                using (var request = new HttpRequestMessage(HttpMethod.Post, this.BuildUrl(url)))
+                this.AddDispose(formData);
+                using (var content = formData?.GetContent())
                 {
-                    this.SetDefault(request);
-                    request.Content = content;
-                    var t = await this.m_client.SendAsync(request);
-                    
-                    StreamBody result = new StreamBody(t);
-                    this.AddDispose(result);
-                    await result.Proc();
+                    using (var request = new HttpRequestMessage(HttpMethod.Post, this.BuildUrl(url)))
+                    {
+                        this.SetDefault(request);
+                        request.Content = content;
+                        var t = await this.m_client.SendAsync(request);
 
-                    return result;
+                        StreamBody result = new StreamBody(t);
+                        this.AddDispose(result);
+                        await result.Proc();
+
+                        return result;
+                    }
                 }
             }
-        }
+            catch (Exception ex)
+            {
+                if (ex is HttpRequestException && ex.InnerException != null && ex.InnerException is IOException)
+                {
+                    if (retry_count >= 0 && retry_count < 3)
+                    {
+                        retry_count++;
+                        return await this.PostStreamAsync(url, formData, retry_count);
+                    }
+                }
 
-        public StreamBody PostStream(string url, FormData formData)
+                throw ex;
+            }
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="formData"></param>
+        /// <param name="retry_count">io异常重试次数，-1.不重试，0.重试三次</param>
+        /// <returns></returns>
+        public StreamBody PostStream(string url, FormData formData, int retry_count = 0)
         {
-            var t = this.PostStreamAsync(url, formData);
+            var t = this.PostStreamAsync(url, formData, retry_count);
             t.Wait();
 
             return t.Result;
         }
-
-        public async Task<StringBody> PostAsync(string url, FormData formData)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="formData"></param>
+        /// <param name="retry_count">io异常重试次数，-1.不重试，0.重试三次</param>
+        /// <returns></returns>
+        public async Task<StringBody> PostAsync(string url, FormData formData, int retry_count = 0)
         {
-            this.AddDispose(formData);
-            using (var content = formData?.GetContent())
+            try
             {
-                using (var request = new HttpRequestMessage(HttpMethod.Post, this.BuildUrl(url)))
+                this.AddDispose(formData);
+                using (var content = formData?.GetContent())
                 {
-                    this.SetDefault(request);
-                    request.Content = content;
-                    var t = await this.m_client.SendAsync(request);
+                    using (var request = new HttpRequestMessage(HttpMethod.Post, this.BuildUrl(url)))
+                    {
+                        this.SetDefault(request);
+                        request.Content = content;
+                        var t = await this.m_client.SendAsync(request);
 
-                    StringBody result = new StringBody(t);
-                    this.AddDispose(result);
-                    await result.Proc();
+                        StringBody result = new StringBody(t);
+                        this.AddDispose(result);
+                        await result.Proc();
 
-                    return result;
+                        return result;
+                    }
                 }
             }
-        }
+            catch (Exception ex)
+            {
+                if (ex is HttpRequestException && ex.InnerException != null && ex.InnerException is IOException)
+                {
+                    if (retry_count >= 0 && retry_count < 3)
+                    {
+                        retry_count++;
+                        return await this.PostAsync(url, formData, retry_count);
+                    }
+                }
 
-        public StringBody Post(string url, FormData formData)
+                throw ex;
+            }
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="formData"></param>
+        /// <param name="retry_count">io异常重试次数，-1.不重试，0.重试三次</param>
+        /// <returns></returns>
+        public StringBody Post(string url, FormData formData, int retry_count = 0)
         {
-            var t = this.PostAsync(url, formData);
+            var t = this.PostAsync(url, formData, retry_count);
             t.Wait();
 
             return t.Result;
@@ -557,85 +818,170 @@ namespace Afx.HttpClient
         #endregion
 
         #region put
-        public async Task<BytesBody> PutBytesAsync(string url, FormData formData)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="formData"></param>
+        /// <param name="retry_count">io异常重试次数，-1.不重试，0.重试三次</param>
+        /// <returns></returns>
+        public async Task<BytesBody> PutBytesAsync(string url, FormData formData, int retry_count = 0)
         {
-            this.AddDispose(formData);
-            using (var content = formData?.GetContent())
+            try
             {
-                using (var request = new HttpRequestMessage(HttpMethod.Put, this.BuildUrl(url)))
+                this.AddDispose(formData);
+                using (var content = formData?.GetContent())
                 {
-                    this.SetDefault(request);
-                    request.Content = content;
-                    var t = await this.m_client.SendAsync(request);
-                    
-                    BytesBody result = new BytesBody(t);
-                    this.AddDispose(result);
-                    await result.Proc();
+                    using (var request = new HttpRequestMessage(HttpMethod.Put, this.BuildUrl(url)))
+                    {
+                        this.SetDefault(request);
+                        request.Content = content;
+                        var t = await this.m_client.SendAsync(request);
 
-                    return result;
+                        BytesBody result = new BytesBody(t);
+                        this.AddDispose(result);
+                        await result.Proc();
+
+                        return result;
+                    }
                 }
             }
-        }
+            catch (Exception ex)
+            {
+                if (ex is HttpRequestException && ex.InnerException != null && ex.InnerException is IOException)
+                {
+                    if (retry_count >= 0 && retry_count < 3)
+                    {
+                        retry_count++;
+                        return await this.PutBytesAsync(url, formData, retry_count);
+                    }
+                }
 
-        public BytesBody PutBytes(string url, FormData formData)
+                throw ex;
+            }
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="formData"></param>
+        /// <param name="retry_count">io异常重试次数，-1.不重试，0.重试三次</param>
+        /// <returns></returns>
+        public BytesBody PutBytes(string url, FormData formData, int retry_count = 0)
         {
-            var t = this.PutBytesAsync(url, formData);
+            var t = this.PutBytesAsync(url, formData, retry_count);
             t.Wait();
 
             return t.Result;
         }
-
-        public async Task<StreamBody> PutStreamAsync(string url, FormData formData)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="formData"></param>
+        /// <param name="retry_count">io异常重试次数，-1.不重试，0.重试三次</param>
+        /// <returns></returns>
+        public async Task<StreamBody> PutStreamAsync(string url, FormData formData, int retry_count = 0)
         {
-            this.AddDispose(formData);
-            using (var content = formData?.GetContent())
+            try
             {
-                using (var request = new HttpRequestMessage(HttpMethod.Put, this.BuildUrl(url)))
+                this.AddDispose(formData);
+                using (var content = formData?.GetContent())
                 {
-                    this.SetDefault(request);
-                    request.Content = content;
-                    var t = await this.m_client.SendAsync(request);
-                    
-                    StreamBody result = new StreamBody(t);
-                    this.AddDispose(result);
-                    await result.Proc();
+                    using (var request = new HttpRequestMessage(HttpMethod.Put, this.BuildUrl(url)))
+                    {
+                        this.SetDefault(request);
+                        request.Content = content;
+                        var t = await this.m_client.SendAsync(request);
 
-                    return result;
+                        StreamBody result = new StreamBody(t);
+                        this.AddDispose(result);
+                        await result.Proc();
+
+                        return result;
+                    }
                 }
             }
-        }
+            catch (Exception ex)
+            {
+                if (ex is HttpRequestException && ex.InnerException != null && ex.InnerException is IOException)
+                {
+                    if (retry_count >= 0 && retry_count < 3)
+                    {
+                        retry_count++;
+                        return await this.PutStreamAsync(url, formData, retry_count);
+                    }
+                }
 
-        public StreamBody PutStream(string url, FormData formData)
+                throw ex;
+            }
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="formData"></param>
+        /// <param name="retry_count">io异常重试次数，-1.不重试，0.重试三次</param>
+        /// <returns></returns>
+        public StreamBody PutStream(string url, FormData formData, int retry_count = 0)
         {
-            var t = this.PutStreamAsync(url, formData);
+            var t = this.PutStreamAsync(url, formData, retry_count);
             t.Wait();
 
             return t.Result;
         }
-
-        public async Task<StringBody> PutAsync(string url, FormData formData)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="formData"></param>
+        /// <param name="retry_count">io异常重试次数，-1.不重试，0.重试三次</param>
+        /// <returns></returns>
+        public async Task<StringBody> PutAsync(string url, FormData formData, int retry_count = 0)
         {
-            this.AddDispose(formData);
-            using (var content = formData?.GetContent())
+            try
             {
-                using (var request = new HttpRequestMessage(HttpMethod.Put, this.BuildUrl(url)))
+                this.AddDispose(formData);
+                using (var content = formData?.GetContent())
                 {
-                    this.SetDefault(request);
-                    request.Content = content;
-                    var t = await this.m_client.SendAsync(request);
-                    
-                    StringBody result = new StringBody(t);
-                    this.AddDispose(result);
-                    await result.Proc();
+                    using (var request = new HttpRequestMessage(HttpMethod.Put, this.BuildUrl(url)))
+                    {
+                        this.SetDefault(request);
+                        request.Content = content;
+                        var t = await this.m_client.SendAsync(request);
 
-                    return result;
+                        StringBody result = new StringBody(t);
+                        this.AddDispose(result);
+                        await result.Proc();
+
+                        return result;
+                    }
                 }
             }
-        }
+            catch (Exception ex)
+            {
+                if (ex is HttpRequestException && ex.InnerException != null && ex.InnerException is IOException)
+                {
+                    if (retry_count >= 0 && retry_count < 3)
+                    {
+                        retry_count++;
+                        return await this.PutAsync(url, formData, retry_count);
+                    }
+                }
 
-        public StringBody Put(string url, FormData formData)
+                throw ex;
+            }
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="formData"></param>
+        /// <param name="retry_count">io异常重试次数，-1.不重试，0.重试三次</param>
+        /// <returns></returns>
+        public StringBody Put(string url, FormData formData, int retry_count = 0)
         {
-            var t = this.PutAsync(url, formData);
+            var t = this.PutAsync(url, formData, retry_count);
             t.Wait();
 
             return t.Result;
@@ -647,7 +993,7 @@ namespace Afx.HttpClient
         {
             if (dis == null) return;
             if (this.disposables == null) this.disposables = new List<IDisposable>();
-            this.disposables.Add(dis);
+            if(!this.disposables.Contains(dis)) this.disposables.Add(dis);
         }
 
         /// <summary>

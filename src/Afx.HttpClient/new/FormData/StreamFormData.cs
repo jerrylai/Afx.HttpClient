@@ -55,6 +55,7 @@ namespace Afx.HttpClient
 
         public override HttpContent GetContent()
         {
+            if (this.stream.CanSeek) this.stream.Seek(0, SeekOrigin.Begin);
             var result = new StreamContent(this.stream);
             this.AddDispose(result);
             if (!string.IsNullOrEmpty(this.ContentType))

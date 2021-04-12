@@ -32,7 +32,7 @@ namespace Afx.HttpClient
         {
             if (dis == null) return;
             if (this.disposables == null) this.disposables = new List<IDisposable>();
-            this.disposables.Add(dis);
+           if(!disposables.Contains(dis)) this.disposables.Add(dis);
         }
 
         protected virtual void Dispose(bool disposing)
