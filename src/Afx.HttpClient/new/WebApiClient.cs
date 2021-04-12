@@ -314,7 +314,7 @@ namespace Afx.HttpClient
         public WebApiClient(string baseAddress, string name = null, Action<HttpClientHandler> config = null)
         {
             this.BaseAddress = baseAddress;
-            this.Init(null, config);
+            this.Init(name, config);
         }
 
         private string BuildUrl(string url)
