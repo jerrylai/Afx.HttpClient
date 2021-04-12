@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Linq;
 using System.Threading;
 using System.Collections.Concurrent;
+using System.IO;
 
 namespace Afx.HttpClient
 {
@@ -339,7 +340,7 @@ namespace Afx.HttpClient
             using (var request = new HttpRequestMessage(HttpMethod.Get, this.BuildUrl(url)))
             {
                 this.SetDefault(request);
-                var rp = await m_client.SendAsync(request);
+                HttpResponseMessage rp = await this.m_client.SendAsync(request);
                 BytesBody result = new BytesBody(rp);
                 this.AddDispose(result);
                 await result.Proc();
@@ -361,7 +362,7 @@ namespace Afx.HttpClient
             using (var request = new HttpRequestMessage(HttpMethod.Get, this.BuildUrl(url)))
             {
                 this.SetDefault(request);
-                var rp = await m_client.SendAsync(request);
+                var rp = await this.m_client.SendAsync(request);
                 StreamBody result = new StreamBody(rp);
                 this.AddDispose(result);
                 await result.Proc();
@@ -383,7 +384,7 @@ namespace Afx.HttpClient
             using (var request = new HttpRequestMessage(HttpMethod.Get, this.BuildUrl(url)))
             {
                 this.SetDefault(request);
-                var rp = await m_client.SendAsync(request);
+                var rp = await this.m_client.SendAsync(request);
                 StringBody result = new StringBody(rp);
                 this.AddDispose(result);
                 await result.Proc();
@@ -407,7 +408,7 @@ namespace Afx.HttpClient
             using (var request = new HttpRequestMessage(HttpMethod.Delete, this.BuildUrl(url)))
             {
                 this.SetDefault(request);
-                var t = await m_client.SendAsync(request);
+                var t = await this.m_client.SendAsync(request);
                 BytesBody result = new BytesBody(t);
                 this.AddDispose(result);
                 await result.Proc();
@@ -429,7 +430,7 @@ namespace Afx.HttpClient
             using (var request = new HttpRequestMessage(HttpMethod.Delete, this.BuildUrl(url)))
             {
                 this.SetDefault(request);
-                var t = await m_client.SendAsync(request);
+                var t = await this.m_client.SendAsync(request);
                 StreamBody result = new StreamBody(t);
                 this.AddDispose(result);
                 await result.Proc();
@@ -451,7 +452,7 @@ namespace Afx.HttpClient
             using (var request = new HttpRequestMessage(HttpMethod.Delete, this.BuildUrl(url)))
             {
                 this.SetDefault(request);
-                var t = await m_client.SendAsync(request);
+                var t = await this.m_client.SendAsync(request);
                 StringBody result = new StringBody(t);
                 this.AddDispose(result);
                 await result.Proc();
@@ -479,7 +480,7 @@ namespace Afx.HttpClient
                 {
                     this.SetDefault(request);
                     request.Content = content;
-                    var t = await m_client.SendAsync(request);
+                    var t = await this.m_client.SendAsync(request);
                     
                     BytesBody result = new BytesBody(t);
                     this.AddDispose(result);
@@ -507,7 +508,7 @@ namespace Afx.HttpClient
                 {
                     this.SetDefault(request);
                     request.Content = content;
-                    var t = await m_client.SendAsync(request);
+                    var t = await this.m_client.SendAsync(request);
                     
                     StreamBody result = new StreamBody(t);
                     this.AddDispose(result);
@@ -535,7 +536,7 @@ namespace Afx.HttpClient
                 {
                     this.SetDefault(request);
                     request.Content = content;
-                    var t = await m_client.SendAsync(request);
+                    var t = await this.m_client.SendAsync(request);
 
                     StringBody result = new StringBody(t);
                     this.AddDispose(result);
@@ -565,7 +566,7 @@ namespace Afx.HttpClient
                 {
                     this.SetDefault(request);
                     request.Content = content;
-                    var t = await m_client.SendAsync(request);
+                    var t = await this.m_client.SendAsync(request);
                     
                     BytesBody result = new BytesBody(t);
                     this.AddDispose(result);
@@ -593,7 +594,7 @@ namespace Afx.HttpClient
                 {
                     this.SetDefault(request);
                     request.Content = content;
-                    var t = await m_client.SendAsync(request);
+                    var t = await this.m_client.SendAsync(request);
                     
                     StreamBody result = new StreamBody(t);
                     this.AddDispose(result);
@@ -621,7 +622,7 @@ namespace Afx.HttpClient
                 {
                     this.SetDefault(request);
                     request.Content = content;
-                    var t = await m_client.SendAsync(request);
+                    var t = await this.m_client.SendAsync(request);
                     
                     StringBody result = new StringBody(t);
                     this.AddDispose(result);
