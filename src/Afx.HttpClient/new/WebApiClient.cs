@@ -289,7 +289,7 @@ namespace Afx.HttpClient
             m_client.DefaultRequestHeaders.AcceptCharset.Clear();
             m_client.DefaultRequestHeaders.AcceptCharset.TryParseAdd("utf-8");
             m_client.DefaultRequestHeaders.UserAgent.Clear();
-            m_client.DefaultRequestHeaders.UserAgent.TryParseAdd("Afx.HttpClient");
+            m_client.DefaultRequestHeaders.UserAgent.TryParseAdd("Chrome/189.0.4389.114");// "Afx.HttpClient");
 
             m_client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue() { NoCache = true };
 
