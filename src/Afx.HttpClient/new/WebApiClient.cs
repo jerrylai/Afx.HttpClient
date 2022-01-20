@@ -48,9 +48,10 @@ namespace Afx.HttpClient
         }
 
         private static int _handlerLifetime = 120;
-        private static ConcurrentDictionary<string, Lazy<CacheModel>> _activeHandlers = new ConcurrentDictionary<string, Lazy<CacheModel>>(StringComparer.OrdinalIgnoreCase);
+        private static object lockCreateObj = new object();
+        private static ConcurrentDictionary<string, CacheModel> _activeHandlers = new ConcurrentDictionary<string, CacheModel>(StringComparer.OrdinalIgnoreCase);
         private static Timer _clearTimer;
-        private static object _clearObj = new object();
+        private static object lockClearObj = new object();
         private static volatile bool _isStartClear = false;
         private static ConcurrentQueue<ClearModel> _clearQueue = new ConcurrentQueue<ClearModel>();
 
@@ -71,22 +72,27 @@ namespace Afx.HttpClient
         {
             if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name));
             var now = DateTime.Now;
-            var m = _activeHandlers.GetOrAdd(name, (k) =>
+            if (!_activeHandlers.TryGetValue(name, out var m))
             {
-                return new Lazy<CacheModel>(() =>
+                lock (lockCreateObj)
                 {
-                    var h = new HttpClientHandler();
-                    h.ServerCertificateCustomValidationCallback = ServerCertificateValidation;
-                    try
+                    if(!_activeHandlers.TryGetValue(name, out m))
                     {
-                        h.SslProtocols = SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12;
-                    }
-                    catch (Exception ex) { Console.WriteLine(ex.Message + ex.StackTrace); }
-                    if (config != null) try { config(h); } catch { }
+                        var h = new HttpClientHandler();
+                        h.ServerCertificateCustomValidationCallback = ServerCertificateValidation;
+                        try
+                        {
+                            h.SslProtocols = SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12;
+                        }
+                        catch (Exception ex) { Console.WriteLine(ex.Message + ex.StackTrace); }
+                        if (config != null) try { config(h); } catch { }
 
-                    return new CacheModel() { handler = new LifetimeTrackingHttpMessageHandler(h), createTime = DateTime.Now };
-                }, LazyThreadSafetyMode.ExecutionAndPublication);
-            }).Value;
+                        m = new CacheModel() { handler = new LifetimeTrackingHttpMessageHandler(h), createTime = DateTime.Now };
+                        _activeHandlers.TryAdd(name, m);
+                    }
+                }
+            }
+
             if((now - m.createTime).TotalSeconds > _handlerLifetime)
             {
                 StartClear(name);
@@ -99,7 +105,7 @@ namespace Afx.HttpClient
         {
             if(_activeHandlers.TryRemove(name, out var v))
             {
-                _clearQueue.Enqueue(new ClearModel { weak = new WeakReference(v.Value.handler), handler = v.Value.handler.InnerHandler as HttpClientHandler });
+                _clearQueue.Enqueue(new ClearModel { weak = new WeakReference(v.handler), handler = v.handler.InnerHandler as HttpClientHandler });
                 StartCleanupTimer();
             }
         }
@@ -107,7 +113,7 @@ namespace Afx.HttpClient
         private static void StartCleanupTimer()
         {
             if (_isStartClear) return;
-            lock (_clearObj)
+            lock (lockClearObj)
             {
                 if (_isStartClear) return;
                 bool restoreFlow = false;
