@@ -394,7 +394,7 @@ namespace Afx.HttpClient
                     }
                 }
 
-                throw ex;
+                throw;
             }
         }
 
@@ -444,7 +444,7 @@ namespace Afx.HttpClient
                     }
                 }
 
-                throw ex;
+                throw;
             }
         }
         /// <summary>
@@ -493,7 +493,7 @@ namespace Afx.HttpClient
                     }
                 }
 
-                throw ex;
+                throw;
             }
         }
         /// <summary>
@@ -544,7 +544,7 @@ namespace Afx.HttpClient
                     }
                 }
 
-                throw ex;
+                throw;
             }
         }
         /// <summary>
@@ -592,7 +592,7 @@ namespace Afx.HttpClient
                     }
                 }
 
-                throw ex;
+                throw;
             }
         }
         /// <summary>
@@ -640,7 +640,7 @@ namespace Afx.HttpClient
                     }
                 }
 
-                throw ex;
+                throw;
             }
         }
         /// <summary>
@@ -698,7 +698,7 @@ namespace Afx.HttpClient
                     }
                 }
 
-                throw ex;
+                throw;
             }
         }
         /// <summary>
@@ -748,7 +748,7 @@ namespace Afx.HttpClient
                     }
                 }
 
-                throw ex;
+                throw;
             }
         }
         /// <summary>
@@ -804,7 +804,7 @@ namespace Afx.HttpClient
                     }
                 }
 
-                throw ex;
+                throw;
             }
         }
         /// <summary>
@@ -863,7 +863,7 @@ namespace Afx.HttpClient
                     }
                 }
 
-                throw ex;
+                throw;
             }
         }
         /// <summary>
@@ -919,7 +919,7 @@ namespace Afx.HttpClient
                     }
                 }
 
-                throw ex;
+                throw;
             }
         }
         /// <summary>
@@ -975,7 +975,7 @@ namespace Afx.HttpClient
                     }
                 }
 
-                throw ex;
+                throw;
             }
         }
         /// <summary>
