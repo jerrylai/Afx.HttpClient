@@ -7,15 +7,12 @@ using System.Net.Security;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
-using System.Linq;
 using System.Threading;
 using System.Collections.Concurrent;
 using System.IO;
 
 namespace Afx.HttpClient
 {
-    
-
     /// <summary>
     /// WebApiClient
     /// </summary>
@@ -272,15 +269,26 @@ namespace Afx.HttpClient
         /// </summary>
         public bool IsDisposed { get; private set; }
 
+        public bool isStatic = false;
+
         /// <summary>
         /// HttpClient
         /// </summary>
         public WebApiClient()
         {
-            this.Init(null, null);
+            this.Init(null, null, false);
         }
 
-        private void Init(string name, Action<HttpClientHandler> config)
+        /// <summary>
+        /// HttpClient
+        /// </summary>
+        /// <param name="is_static">是否未静态变量</param>
+        public WebApiClient(bool is_static)
+        {
+            this.Init(null, null, is_static);
+        }
+
+        private void Init(string name, Action<HttpClientHandler> config, bool is_static)
         {
             if (string.IsNullOrEmpty(name)) name = "default";
             var handler = GetHandler(name, config);
@@ -295,12 +303,13 @@ namespace Afx.HttpClient
             m_client.DefaultRequestHeaders.AcceptCharset.Clear();
             m_client.DefaultRequestHeaders.AcceptCharset.TryParseAdd("utf-8");
             m_client.DefaultRequestHeaders.UserAgent.Clear();
-            m_client.DefaultRequestHeaders.UserAgent.TryParseAdd("Chrome/189.0.4389.114");// "Afx.HttpClient");
+            m_client.DefaultRequestHeaders.UserAgent.TryParseAdd("Chrome");// "Afx.HttpClient");
 
             m_client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue() { NoCache = true };
 
             this.Headers = new Dictionary<string, string>();
             this.IsDisposed = false;
+            this.isStatic = is_static;
         }
         /// <summary>
         /// 
@@ -309,7 +318,17 @@ namespace Afx.HttpClient
         public WebApiClient(string baseAddress)
         {
             this.BaseAddress = baseAddress;
-            this.Init(nameof(WebApiClient), null);
+            this.Init(nameof(WebApiClient), null, false);
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="baseAddress"></param>
+        /// <param name="is_static">是否未静态变量</param>
+        public WebApiClient(string baseAddress, bool is_static)
+        {
+            this.BaseAddress = baseAddress;
+            this.Init(nameof(WebApiClient), null, is_static);
         }
         /// <summary>
         /// 
@@ -317,10 +336,11 @@ namespace Afx.HttpClient
         /// <param name="baseAddress"></param>
         /// <param name="name"></param>
         /// <param name="config"></param>
-        public WebApiClient(string baseAddress, string name = null, Action<HttpClientHandler> config = null)
+        /// <param name="is_static">是否未静态变量</param>
+        public WebApiClient(string baseAddress, string name, Action<HttpClientHandler> config = null, bool is_static = false)
         {
             this.BaseAddress = baseAddress;
-            this.Init(name, config);
+            this.Init(name, config, is_static);
         }
 
         private string BuildUrl(string url)
@@ -997,7 +1017,7 @@ namespace Afx.HttpClient
         private List<IDisposable> disposables;
         private void AddDispose(IDisposable dis)
         {
-            if (dis == null) return;
+            if (this.isStatic || dis == null) return;
             if (this.disposables == null) this.disposables = new List<IDisposable>();
             if(!this.disposables.Contains(dis)) this.disposables.Add(dis);
         }
