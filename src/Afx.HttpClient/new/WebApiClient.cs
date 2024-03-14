@@ -317,7 +317,7 @@ namespace Afx.HttpClient
         /// <param name="baseAddress"></param>
         public WebApiClient(string baseAddress)
         {
-            this.BaseAddress = baseAddress;
+           if(!string.IsNullOrEmpty(baseAddress)) this.BaseAddress = baseAddress;
             this.Init(nameof(WebApiClient), null, false);
         }
         /// <summary>
@@ -327,7 +327,7 @@ namespace Afx.HttpClient
         /// <param name="is_static">是否未静态变量</param>
         public WebApiClient(string baseAddress, bool is_static)
         {
-            this.BaseAddress = baseAddress;
+            if (!string.IsNullOrEmpty(baseAddress)) this.BaseAddress = baseAddress;
             this.Init(nameof(WebApiClient), null, is_static);
         }
         /// <summary>
@@ -339,7 +339,7 @@ namespace Afx.HttpClient
         /// <param name="is_static">是否未静态变量</param>
         public WebApiClient(string baseAddress, string name, Action<HttpClientHandler> config = null, bool is_static = false)
         {
-            this.BaseAddress = baseAddress;
+            if (!string.IsNullOrEmpty(baseAddress)) this.BaseAddress = baseAddress;
             this.Init(name, config, is_static);
         }
 

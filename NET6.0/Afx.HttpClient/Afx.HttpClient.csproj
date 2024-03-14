@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <Authors>jerrylai@aliyun.com</Authors>
-    <Version>10.5.1</Version>
+    <Version>10.5.2</Version>
     <Copyright>Copyright © mycsv 2018</Copyright>
     <Company>mycsv.cn</Company>
     <Product>Afx.HttpClient for .NET 6.0</Product>
